@@ -40,7 +40,10 @@ testActivities <- fread("UCI HAR Dataset/test/Y_test.txt", col.names = c("Activi
 testSubjects <- fread("UCI HAR Dataset/test/subject_test.txt", col.names = c("SubjectNum"))
 test <- cbind(testSubjects, testActivities, test)
 
-# Merge datasets together, change Activity to actual name
+# Merge datasets together, change Activity to actual name, uses melt to convert to tidy data table, then uses dcast to find means of tidy data by SubjectNum and Activity
 combined <- rbind(train, test)
 combined[["Activity"]] <- factor(combined[, Activity],levels = activityLabels[["classLabels"]],labels = activityLabels[["activityName"]])
+combined[["SubjectNum"]] <- as.factor(combined[, SubjectNum])
+combined <- reshape2::melt(data = combined, id = c("SubjectNum", "Activity"))
+combined <- reshape2::dcast(data = combined, SubjectNum + Activity ~ variable, fun.aggregate = mean)
 data.table::fwrite(x = combined, file = "tidyData.csv", quote = FALSE)
